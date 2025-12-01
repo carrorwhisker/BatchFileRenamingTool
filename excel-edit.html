@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量修改Excel单元格内容</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .column-name-input {
+            width: 100% !important;
+            background: transparent !important;
+            border: none !important;
+            color: white !important;
+            font-weight: bold !important;
+            text-align: center !important;
+            padding: 5px !important;
+        }
+
+        .column-name-input:focus {
+            background: rgba(255, 255, 255, 0.2) !important;
+            outline: 2px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 3px !important;
+        }
+
+        th .btn-small {
+            flex-shrink: 0;
+            min-width: 20px;
+            height: 20px;
+            padding: 0;
+            line-height: 1;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        input[type="text"], input[type="file"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button.danger {
+            background: #e74c3c;
+        }
+
+        button.danger:hover {
+            background: #c0392b;
+        }
+
+        button.success {
+            background: #27ae60;
+        }
+
+        button.success:hover {
+            background: #229954;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-item .file-name {
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .actions button {
+            padding: 15px 40px;
+            font-size: 16px;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .cell-input {
+            width: 100px;
+            text-transform: uppercase;
+        }
+
+        .content-input {
+            width: 100%;
+        }
+
+        .file-select-cell {
+            width: 200px;
+        }
+
+        .file-select-cell select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 批量修改Excel单元格内容</h1>
+
+        <!-- 文件上传区域 -->
+        <div class="section">
+            <div class="section-title">上传Excel文件</div>
+            <input type="file" id="fileInput" multiple accept=".xlsx,.xls">
+            <div class="file-list" id="fileList"></div>
+            <div class="help-text">
+                可以上传多个Excel文件，每个文件将根据配置进行修改
+            </div>
+        </div>
+
+        <!-- 单元格修改配置 -->
+        <div class="section">
+            <div class="section-title">单元格修改配置</div>
+            <div style="overflow-x: auto; max-width: 100%;">
+                <table id="configTable">
+                    <thead id="configTableHead">
+                        <!-- 表头将通过JavaScript动态生成 -->
+                    </thead>
+                    <tbody id="configTableBody">
+                        <!-- 数据行将通过JavaScript动态添加 -->
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 10px;">
+                <button onclick="addConfigRow()" class="btn-small">+ 添加配置行</button>
+                <button onclick="addConfigColumn()" class="btn-small">+ 添加列</button>
+            </div>
+            <div class="help-text">
+                每行代表一个单元格修改配置。列名可以自定义，例如：文件、单元格坐标、新内容等
+            </div>
+        </div>
+
+        <!-- 状态提示 -->
+        <div class="status" id="statusMessage"></div>
+
+        <!-- 操作按钮 -->
+        <div class="actions">
+            <button onclick="processFiles()" class="success">开始处理</button>
+        </div>
+    </div>
+
+    <script>
+        let uploadedFiles = [];
+        let columnNames = ['文件', '单元格坐标', '新内容']; // 默认列名
+        let configRows = [];
+
+        // 初始化
+        function init() {
+            renderTableHeader();
+            addConfigRow(['', 'J5', '']); // 默认添加一行，单元格为J5
+            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+        }
+
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            uploadedFiles = files;
+            displayFileList();
+            updateFileSelects();
+        }
+
+        // 显示文件列表
+        function displayFileList() {
+            const fileListDiv = document.getElementById('fileList');
+            fileListDiv.innerHTML = '';
+            
+            if (uploadedFiles.length === 0) {
+                fileListDiv.innerHTML = '<div class="help-text">未上传文件</div>';
+                return;
+            }
+
+            uploadedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span class="file-name">${index + 1}. ${file.name} (${(file.size / 1024).toFixed(2)} KB)</span>
+                `;
+                fileListDiv.appendChild(fileItem);
+            });
+        }
+
+        // 渲染表头
+        function renderTableHeader() {
+            const thead = document.getElementById('configTableHead');
+            let headerHTML = '<tr>';
+            
+            columnNames.forEach((colName, index) => {
+                headerHTML += `
+                    <th>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <input type="text" class="column-name-input" value="${colName}" 
+                                   onchange="updateColumnName(${index}, this.value)">
+                            <button onclick="removeConfigColumn(${index})" class="btn-small danger" 
+                                    style="padding: 2px 5px; font-size: 10px;" title="删除列">×</button>
+                        </div>
+                    </th>
+                `;
+            });
+            
+            headerHTML += '<th>操作</th></tr>';
+            thead.innerHTML = headerHTML;
+            
+            renderConfigRows();
+        }
+
+        // 更新列名
+        function updateColumnName(index, newName) {
+            columnNames[index] = newName;
+            renderTableHeader();
+        }
+
+        // 添加列
+        function addConfigColumn() {
+            const newColumnName = `列${columnNames.length + 1}`;
+            columnNames.push(newColumnName);
+            renderTableHeader();
+        }
+
+        // 删除列
+        function removeConfigColumn(index) {
+            if (columnNames.length <= 1) {
+                showStatus('至少需要保留一列', 'error');
+                return;
+            }
+            
+            columnNames.splice(index, 1);
+            renderTableHeader();
+        }
+
+        // 渲染配置行
+        function renderConfigRows() {
+            const tbody = document.getElementById('configTableBody');
+            tbody.innerHTML = '';
+            
+            configRows.forEach((rowData, rowIndex) => {
+                const row = document.createElement('tr');
+                let rowHTML = '';
+                
+                columnNames.forEach((colName, colIndex) => {
+                    const value = rowData[colIndex] || '';
+                    
+                    // 根据列名判断输入类型
+                    if (colName === '文件' || colName.toLowerCase().includes('文件')) {
+                        rowHTML += `
+                            <td class="file-select-cell">
+                                <select class="config-cell" data-row="${rowIndex}" data-col="${colIndex}">
+                                    <option value="">-- 选择文件 --</option>
+                                    ${uploadedFiles.map((file, idx) => 
+                                        `<option value="${idx}" ${value == idx ? 'selected' : ''}>${file.name}</option>`
+                                    ).join('')}
+                                </select>
+                            </td>
+                        `;
+                    } else if (colName === '单元格坐标' || colName.toLowerCase().includes('坐标') || colName.toLowerCase().includes('cell')) {
+                        rowHTML += `
+                            <td>
+                                <input type="text" class="config-cell cell-input" 
+                                       value="${value}" 
+                                       data-row="${rowIndex}" 
+                                       data-col="${colIndex}"
+                                       placeholder="如: J5">
+                            </td>
+                        `;
+                    } else {
+                        rowHTML += `
+                            <td>
+                                <input type="text" class="config-cell content-input" 
+                                       value="${value}" 
+                                       data-row="${rowIndex}" 
+                                       data-col="${colIndex}">
+                            </td>
+                        `;
+                    }
+                });
+                
+                rowHTML += '<td><button onclick="removeConfigRow(this)" class="btn-small danger">删除</button></td>';
+                row.innerHTML = rowHTML;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 添加配置行
+        function addConfigRow(rowData = []) {
+            configRows.push(rowData);
+            renderConfigRows();
+        }
+
+        // 删除配置行
+        function removeConfigRow(btn) {
+            const row = btn.closest('tr');
+            const rowIndex = Array.from(row.parentNode.children).indexOf(row);
+            configRows.splice(rowIndex, 1);
+            renderConfigRows();
+        }
+
+        // 更新文件选择下拉框
+        function updateFileSelects() {
+            const selects = document.querySelectorAll('.file-select-cell select');
+            selects.forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">-- 选择文件 --</option>';
+                uploadedFiles.forEach((file, idx) => {
+                    const option = document.createElement('option');
+                    option.value = idx;
+                    option.textContent = file.name;
+                    if (currentValue == idx) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // 监听配置变化
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('config-cell')) {
+                const rowIndex = parseInt(e.target.dataset.row);
+                const colIndex = parseInt(e.target.dataset.col);
+                if (configRows[rowIndex]) {
+                    configRows[rowIndex][colIndex] = e.target.value;
+                }
+            }
+        });
+
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('config-cell')) {
+                const rowIndex = parseInt(e.target.dataset.row);
+                const colIndex = parseInt(e.target.dataset.col);
+                if (configRows[rowIndex]) {
+                    configRows[rowIndex][colIndex] = e.target.value;
+                }
+            }
+        });
+
+        // 处理文件
+        async function processFiles() {
+            if (uploadedFiles.length === 0) {
+                showStatus('请先上传Excel文件', 'error');
+                return;
+            }
+
+            const tbody = document.getElementById('configTableBody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            if (rows.length === 0) {
+                showStatus('请至少添加一条配置', 'error');
+                return;
+            }
+
+            showStatus('正在处理文件，请稍候...', 'success');
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            // 识别列索引
+            const fileColIndex = columnNames.findIndex(col => col === '文件' || col.toLowerCase().includes('文件'));
+            const cellColIndex = columnNames.findIndex(col => col === '单元格坐标' || col.toLowerCase().includes('坐标') || col.toLowerCase().includes('cell'));
+            const contentColIndex = columnNames.findIndex((col, idx) => idx !== fileColIndex && idx !== cellColIndex);
+
+            if (fileColIndex === -1 || cellColIndex === -1 || contentColIndex === -1) {
+                showStatus('请确保有"文件"、"单元格坐标"和内容列', 'error');
+                return;
+            }
+
+            // 从DOM直接读取所有配置
+            const fileConfigs = {};
+            rows.forEach((row, rowIndex) => {
+                const cells = row.querySelectorAll('.config-cell');
+                if (cells.length === 0) return;
+
+                const fileIndex = cells[fileColIndex] ? cells[fileColIndex].value : '';
+                const cellAddress = cells[cellColIndex] ? cells[cellColIndex].value.trim() : '';
+                const newContent = cells[contentColIndex] ? cells[contentColIndex].value : '';
+
+                // 跳过无效配置
+                if (fileIndex === '' || fileIndex === null || fileIndex === undefined) {
+                    return;
+                }
+
+                if (!cellAddress) {
+                    return;
+                }
+
+                if (!fileConfigs[fileIndex]) {
+                    fileConfigs[fileIndex] = [];
+                }
+
+                fileConfigs[fileIndex].push({
+                    cell: cellAddress.toUpperCase(),
+                    content: newContent || ''
+                });
+            });
+
+            // 检查是否有有效配置
+            if (Object.keys(fileConfigs).length === 0) {
+                showStatus('没有有效的配置，请确保选择了文件并填写了单元格坐标', 'error');
+                return;
+            }
+
+            console.log('配置信息:', fileConfigs);
+            console.log('文件列表:', uploadedFiles.map(f => f.name));
+
+            // 处理每个文件
+            for (const [fileIndex, modifications] of Object.entries(fileConfigs)) {
+                try {
+                    const file = uploadedFiles[parseInt(fileIndex)];
+                    if (!file) {
+                        console.warn('文件索引无效:', fileIndex);
+                        continue;
+                    }
+
+                    console.log(`处理文件: ${file.name}, 修改项: ${modifications.length}`);
+
+                    // 读取Excel文件（ExcelJS会自动保留所有样式）
+                    const arrayBuffer = await file.arrayBuffer();
+                    const workbook = new ExcelJS.Workbook();
+                    await workbook.xlsx.load(arrayBuffer);
+
+                    // 获取第一个工作表
+                    const worksheet = workbook.getWorksheet(1);
+
+                    // 应用所有修改（只修改value，样式自动保留）
+                    modifications.forEach(mod => {
+                        const cellAddress = mod.cell;
+                        const newContent = mod.content;
+
+                        try {
+                            // ExcelJS会自动保留原有样式，只需修改value
+                            const cell = worksheet.getCell(cellAddress);
+                            cell.value = newContent; // 仅修改值，样式不变
+                        } catch (e) {
+                            console.error('修改单元格失败:', cellAddress, e);
+                        }
+                    });
+
+                    console.log(`文件 ${file.name} 修改完成，准备下载`);
+
+                    // 生成修改后的文件（ExcelJS会自动保留样式）
+                    const buffer = await workbook.xlsx.writeBuffer();
+                    const blob = new Blob([buffer], { 
+                        type: file.name.endsWith('.xls') ? 'application/vnd.ms-excel' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+                    });
+
+                    // 下载文件
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name.replace(/\.(xlsx|xls)$/, '_修改.$1');
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    successCount++;
+
+                    // 延迟下载，避免浏览器阻止
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                } catch (error) {
+                    console.error('处理文件失败:', error);
+                    errorCount++;
+                }
+            }
+
+            showStatus(`处理完成！成功: ${successCount}, 失败: ${errorCount}`, successCount > 0 ? 'success' : 'error');
+        }
+
+        // 显示状态消息
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>

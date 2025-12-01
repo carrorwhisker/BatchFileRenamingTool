@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量文件重命名工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+
+        .column-name-input {
+            width: 100% !important;
+            background: transparent !important;
+            border: none !important;
+            color: white !important;
+            font-weight: bold !important;
+            text-align: center !important;
+            padding: 5px !important;
+        }
+
+        .column-name-input:focus {
+            background: rgba(255, 255, 255, 0.2) !important;
+            outline: 2px solid rgba(255, 255, 255, 0.5) !important;
+            border-radius: 3px !important;
+        }
+
+        th .btn-small {
+            flex-shrink: 0;
+            min-width: 20px;
+            height: 20px;
+            padding: 0;
+            line-height: 1;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        input[type="text"], input[type="file"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button.danger {
+            background: #e74c3c;
+        }
+
+        button.danger:hover {
+            background: #c0392b;
+        }
+
+        button.success {
+            background: #27ae60;
+        }
+
+        button.success:hover {
+            background: #229954;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .template-editor {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .template-editor input {
+            flex: 1;
+        }
+
+        .variable-config {
+            margin-top: 15px;
+        }
+
+        .variable-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .variable-item input {
+            flex: 1;
+        }
+
+        .variable-item select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .preview-section {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .preview-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            word-break: break-all;
+        }
+
+        .preview-item .old-name {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .preview-item .new-name {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-item .file-name {
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .actions {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .actions button {
+            padding: 15px 40px;
+            font-size: 16px;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .lang-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .lang-switcher button {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .lang-switcher button:hover {
+            background: #5568d3;
+        }
+
+        .container {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lang-switcher">
+            <button onclick="toggleLanguage()" id="langBtn">EN</button>
+        </div>
+        <h1 id="title">📝 批量文件生成工具</h1>
+
+        <!-- 模板文件选择区域 -->
+        <div class="section">
+            <div class="section-title" data-i18n="selectTemplate">选择模板文件</div>
+            <label for="templateFileInput" style="display: block; margin-bottom: 10px;">
+                <span id="fileInputLabel" data-i18n="chooseFile">选择文件</span>
+                <input type="file" id="templateFileInput" style="display: none;" onchange="handleTemplateFileSelect(event)">
+                <button type="button" onclick="document.getElementById('templateFileInput').click()" class="btn-small" style="margin-left: 10px;" data-i18n="browseFile">浏览</button>
+            </label>
+            <div class="file-list" id="templateFileInfo">
+                <div class="help-text" id="noFileSelected" data-i18n="noFileSelected">未选择任何文件</div>
+            </div>
+            <div class="help-text" data-i18n="templateHelp">
+                选择一个文件作为模板，将根据数据生成多个不同名称的文件副本
+            </div>
+        </div>
+
+        <!-- 数据管理区域 -->
+        <div class="section">
+            <div class="section-title" data-i18n="dataManagement">数据管理</div>
+            <div style="overflow-x: auto; max-width: 100%;">
+                <table id="dataTable">
+                    <thead id="dataTableHead">
+                        <!-- 表头将通过JavaScript动态生成 -->
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- 数据行将通过JavaScript动态添加 -->
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 10px;">
+                <button onclick="addDataRow()" class="btn-small" data-i18n="addRow">+ 添加数据行</button>
+                <button onclick="addDataColumn()" class="btn-small" data-i18n="addColumn">+ 添加列</button>
+            </div>
+        </div>
+
+        <!-- 文件名模板配置 -->
+        <div class="section">
+            <div class="section-title" data-i18n="templateConfig">文件名模板配置</div>
+            <div class="template-editor">
+                <input type="text" id="templateInput" data-i18n-placeholder="templatePlaceholder" 
+                       oninput="updateVariableConfig()">
+            </div>
+            <div class="help-text" data-i18n="templateHelpText">
+                使用 {变量名} 来定义变量，变量名对应数据管理的列名。将根据数据行数量生成对应数量的文件。
+            </div>
+            
+            <div class="variable-config" id="variableConfig">
+                <!-- 变量配置将通过JavaScript动态生成 -->
+            </div>
+        </div>
+
+        <!-- 预览区域 -->
+        <div class="section">
+            <div class="section-title" data-i18n="preview">生成文件预览</div>
+            <div class="preview-section" id="previewSection"></div>
+            <button onclick="generatePreview()" class="btn-small" data-i18n="refreshPreview">刷新预览</button>
+            <div class="help-text" id="fileCountText">
+                <span id="fileCountDisplay"></span>
+                <span id="fileCount" style="display: none;">0</span>
+            </div>
+        </div>
+
+        <!-- 状态提示 -->
+        <div class="status" id="statusMessage"></div>
+
+        <!-- 操作按钮 -->
+        <div class="actions">
+            <button onclick="generateFiles()" class="success" data-i18n="generateFiles">生成文件</button>
+        </div>
+    </div>
+
+    <script>
+        // 语言设置
+        let currentLang = 'zh';
+        const translations = {
+            zh: {
+                title: '📝 批量文件生成工具',
+                selectTemplate: '选择模板文件',
+                templateHelp: '选择一个文件作为模板，将根据数据生成多个不同名称的文件副本',
+                dataManagement: '数据管理',
+                addRow: '+ 添加数据行',
+                addColumn: '+ 添加列',
+                templateConfig: '文件名模板配置',
+                templatePlaceholder: '例如：示例文档_{编号}_{日期}_{项目名称}.xls',
+                templateHelpText: '使用 {变量名} 来定义变量，变量名对应数据管理的列名。将根据数据行数量生成对应数量的文件。',
+                preview: '生成文件预览',
+                refreshPreview: '刷新预览',
+                fileCount: '将生成 {count} 个文件（根据数据行数量）',
+                generateFiles: '生成文件',
+                operation: '操作',
+                delete: '删除',
+                clear: '清除',
+                selectColumn: '-- 选择数据列 --',
+                noVariables: '未检测到变量，请使用 {变量名} 格式，变量名对应数据管理的列名',
+                selectTemplateFirst: '请先选择模板文件',
+                addRowFirst: '请先添加数据行',
+                chooseFile: '选择文件',
+                browseFile: '浏览',
+                noFileSelected: '未选择任何文件',
+                selectColumnForVars: '请为以下变量选择数据列: {vars}',
+                generating: '正在生成文件，请稍候...',
+                generateComplete: '文件生成完成！成功: {success}, 失败: {error}',
+                templateFile: '模板文件: {name} ({size} KB)',
+                generateFile: '生成文件 {index}: {name}',
+                atLeastOneColumn: '至少需要保留一列',
+                column: '列',
+                exampleDoc: '示例文档'
+            },
+            en: {
+                title: '📝 Batch File Generator',
+                selectTemplate: 'Select Template File',
+                templateHelp: 'Select a file as template, multiple file copies with different names will be generated based on data',
+                dataManagement: 'Data Management',
+                addRow: '+ Add Data Row',
+                addColumn: '+ Add Column',
+                templateConfig: 'Filename Template Configuration',
+                templatePlaceholder: 'e.g.: Example_Document_{Code}_{Date}_{ProjectName}.xls',
+                templateHelpText: 'Use {variableName} to define variables, variable names correspond to column names in data management. Files will be generated based on the number of data rows.',
+                preview: 'File Generation Preview',
+                refreshPreview: 'Refresh Preview',
+                fileCount: 'Will generate {count} files (based on number of data rows)',
+                generateFiles: 'Generate Files',
+                operation: 'Operation',
+                delete: 'Delete',
+                clear: 'Clear',
+                selectColumn: '-- Select Data Column --',
+                noVariables: 'No variables detected, please use {variableName} format, variable names correspond to column names in data management',
+                selectTemplateFirst: 'Please select template file first',
+                addRowFirst: 'Please add data rows first',
+                chooseFile: 'Choose File',
+                browseFile: 'Browse',
+                noFileSelected: 'No file selected',
+                selectColumnForVars: 'Please select data columns for the following variables: {vars}',
+                generating: 'Generating files, please wait...',
+                generateComplete: 'File generation complete! Success: {success}, Failed: {error}',
+                templateFile: 'Template File: {name} ({size} KB)',
+                generateFile: 'Generated File {index}: {name}',
+                atLeastOneColumn: 'At least one column must be kept',
+                column: 'Column',
+                exampleDoc: 'Example Document'
+            }
+        };
+
+        // 默认数据
+        const defaultData = {
+            zh: [['示例项目A', 'A001', '20250101']],
+            en: [['Example Project A', 'A001', '20250101']]
+        };
+
+        const defaultColumnNames = {
+            zh: ['项目名称', '编号', '日期'],
+            en: ['Project Name', 'Code', 'Date']
+        };
+
+        let columnNames = defaultColumnNames[currentLang];
+        let dataRows = [];
+        let templateFile = null;
+        let variables = [];
+        let variableMappings = {};
+
+        // 切换语言
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            updateLanguage();
+        }
+
+        // 更新语言
+        function updateLanguage() {
+            const t = translations[currentLang];
+            document.getElementById('langBtn').textContent = currentLang === 'zh' ? 'EN' : '中文';
+            document.getElementById('title').textContent = t['title'];
+            
+            // 更新所有带 data-i18n 属性的元素
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) {
+                    el.textContent = t[key];
+                }
+            });
+            
+            // 更新文件数量显示
+            updateFileCountText();
+
+            // 更新 placeholder
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) {
+                    el.placeholder = t[key];
+                }
+            });
+
+            // 保存当前数据
+            const currentRows = [];
+            const rows = document.querySelectorAll('#dataTableBody tr');
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input.data-cell');
+                const rowData = Array.from(inputs).map(input => input.value);
+                currentRows.push(rowData);
+            });
+            
+            // 检查列名是否是默认列名，如果是则更新为对应语言的默认列名
+            const isDefaultColumnsZh = JSON.stringify(columnNames) === JSON.stringify(defaultColumnNames['zh']);
+            const isDefaultColumnsEn = JSON.stringify(columnNames) === JSON.stringify(defaultColumnNames['en']);
+            
+            if (isDefaultColumnsZh || isDefaultColumnsEn) {
+                // 如果使用的是默认列名，则更新为当前语言的默认列名
+                columnNames = [...defaultColumnNames[currentLang]];
+            }
+            
+            // 检查数据是否是默认数据
+            const isDefaultDataZh = currentRows.length === 1 && 
+                                   JSON.stringify(currentRows[0]) === JSON.stringify(defaultData['zh'][0]);
+            const isDefaultDataEn = currentRows.length === 1 && 
+                                   JSON.stringify(currentRows[0]) === JSON.stringify(defaultData['en'][0]);
+            
+            if (isDefaultDataZh || isDefaultDataEn || currentRows.length === 0) {
+                // 如果是默认数据或空数据，则加载当前语言的默认数据
+                const tbody = document.getElementById('dataTableBody');
+                tbody.innerHTML = '';
+                defaultData[currentLang].forEach(row => {
+                    addDataRow(row);
+                });
+            } else {
+                // 保留现有数据，只更新表头
+                renderTableHeader();
+                // 重新填充数据
+                const tbody = document.getElementById('dataTableBody');
+                tbody.innerHTML = '';
+                currentRows.forEach(rowData => {
+                    addDataRow(rowData);
+                });
+            }
+            
+            // 更新模板（如果模板是默认生成的）
+            const templateInput = document.getElementById('templateInput');
+            const defaultTemplateZh = generateDefaultTemplateForLang('zh');
+            const defaultTemplateEn = generateDefaultTemplateForLang('en');
+            if (templateInput.value === defaultTemplateZh || templateInput.value === defaultTemplateEn) {
+                templateInput.value = generateDefaultTemplate();
+            }
+            
+            // 更新模板文件信息显示
+            if (templateFile) {
+                displayTemplateFileInfo();
+            }
+            
+            updateVariableConfig();
+            generatePreview();
+        }
+
+        // 为指定语言生成默认模板
+        function generateDefaultTemplateForLang(lang) {
+            const cols = defaultColumnNames[lang];
+            if (cols.length === 0) return '';
+            const t = translations[lang];
+            const templateParts = [t.exampleDoc];
+            cols.forEach(colName => {
+                templateParts.push(`{${colName}}`);
+            });
+            return templateParts.join('_') + '.xls';
+        }
+
+        // 获取翻译文本
+        function t(key, params = {}) {
+            let text = translations[currentLang][key] || key;
+            Object.keys(params).forEach(k => {
+                text = text.replace(`{${k}}`, params[k]);
+            });
+            return text;
+        }
+
+        // 生成默认模板
+        function generateDefaultTemplate() {
+            if (columnNames.length === 0) return '';
+            
+            const t = translations[currentLang];
+            const templateParts = [t.exampleDoc];
+            columnNames.forEach(colName => {
+                templateParts.push(`{${colName}}`);
+            });
+            return templateParts.join('_') + '.xls';
+        }
+
+        // 初始化
+        function init() {
+            // 初始化表头
+            renderTableHeader();
+            
+            // 生成并设置默认模板
+            const defaultTemplate = generateDefaultTemplate();
+            if (defaultTemplate) {
+                document.getElementById('templateInput').value = defaultTemplate;
+            }
+            
+            // 加载默认数据
+            defaultData[currentLang].forEach(row => {
+                addDataRow(row);
+            });
+            
+            // 更新变量配置
+            updateVariableConfig();
+            
+            // 初始化文件选择提示
+            displayTemplateFileInfo();
+            
+            // 初始化语言
+            updateLanguage();
+        }
+
+        // 渲染表头
+        function renderTableHeader() {
+            const thead = document.getElementById('dataTableHead');
+            let headerHTML = '<tr>';
+            
+            columnNames.forEach((colName, index) => {
+                const deleteColumnText = t('delete') + ' ' + t('column');
+                headerHTML += `
+                    <th>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <input type="text" class="column-name-input" value="${colName}" 
+                                   onchange="updateColumnName(${index}, this.value)">
+                            <button onclick="removeDataColumn(${index})" class="btn-small danger" 
+                                    style="padding: 2px 5px; font-size: 10px;" title="${deleteColumnText}">×</button>
+                        </div>
+                    </th>
+                `;
+            });
+            
+            headerHTML += `<th>${t('operation')}</th></tr>`;
+            thead.innerHTML = headerHTML;
+            
+            // 重新渲染所有数据行以匹配列数
+            renderDataRows();
+            updateVariableConfig();
+        }
+
+        // 更新列名
+        function updateColumnName(index, newName) {
+            columnNames[index] = newName;
+            // 如果模板为空，自动生成
+            const templateInput = document.getElementById('templateInput');
+            if (!templateInput.value.trim()) {
+                templateInput.value = generateDefaultTemplate();
+            }
+            updateVariableConfig();
+        }
+
+        // 添加列
+        function addDataColumn() {
+            const t = translations[currentLang];
+            const newColumnName = `${t.column}${columnNames.length + 1}`;
+            columnNames.push(newColumnName);
+            renderTableHeader();
+            // 如果模板为空，自动生成
+            const templateInput = document.getElementById('templateInput');
+            if (!templateInput.value.trim()) {
+                templateInput.value = generateDefaultTemplate();
+            }
+            updateDataRows();
+        }
+
+        // 删除列
+        function removeDataColumn(index) {
+            if (columnNames.length <= 1) {
+                showStatus(t('atLeastOneColumn'), 'error');
+                return;
+            }
+            
+            columnNames.splice(index, 1);
+            renderTableHeader();
+            updateDataRows();
+        }
+
+        // 渲染数据行
+        function renderDataRows() {
+            const tbody = document.getElementById('dataTableBody');
+            const currentRows = Array.from(tbody.querySelectorAll('tr'));
+            
+            currentRows.forEach((row, rowIndex) => {
+                const inputs = Array.from(row.querySelectorAll('input.data-cell'));
+                const rowData = inputs.map(input => input.value);
+                
+                let rowHTML = '';
+                columnNames.forEach((colName, colIndex) => {
+                    const value = rowData[colIndex] || '';
+                    rowHTML += `<td><input type="text" class="data-cell" value="${value}"></td>`;
+                });
+                rowHTML += `<td><button onclick="removeDataRow(this)" class="btn-small danger">${t('delete')}</button></td>`;
+                row.innerHTML = rowHTML;
+            });
+        }
+
+        // 添加数据行
+        function addDataRow(rowData = []) {
+            const tbody = document.getElementById('dataTableBody');
+            const row = document.createElement('tr');
+            
+            columnNames.forEach((colName, index) => {
+                const value = rowData[index] || '';
+                row.innerHTML += `<td><input type="text" class="data-cell" value="${value}"></td>`;
+            });
+            
+            row.innerHTML += `<td><button onclick="removeDataRow(this)" class="btn-small danger">${t('delete')}</button></td>`;
+            tbody.appendChild(row);
+            updateDataRows();
+        }
+
+        // 删除数据行
+        function removeDataRow(btn) {
+            btn.closest('tr').remove();
+            updateDataRows();
+        }
+
+        // 更新数据行数组
+        function updateDataRows() {
+            dataRows = [];
+            const rows = document.querySelectorAll('#dataTableBody tr');
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input.data-cell');
+                const rowData = {};
+                columnNames.forEach((colName, index) => {
+                    if (inputs[index]) {
+                        rowData[colName] = inputs[index].value;
+                    }
+                });
+                dataRows.push(rowData);
+            });
+            generatePreview();
+        }
+
+        // 更新变量配置（根据列名自动生成）
+        function updateVariableConfig() {
+            const template = document.getElementById('templateInput').value;
+            const variableRegex = /\{([^}]+)\}/g;
+            const matches = [...template.matchAll(variableRegex)];
+            
+            variables = matches.map(match => match[1]);
+            variables = [...new Set(variables)]; // 去重
+            
+            // 生成变量配置UI
+            const configDiv = document.getElementById('variableConfig');
+            configDiv.innerHTML = '';
+            
+            if (variables.length === 0) {
+                configDiv.innerHTML = `<div class="help-text">${t('noVariables')}</div>`;
+                return;
+            }
+            
+            // 为每个变量创建配置项
+            variables.forEach(variable => {
+                const item = document.createElement('div');
+                item.className = 'variable-item';
+                
+                // 检查变量是否匹配某个列名
+                const matchedColumn = columnNames.find(col => col === variable);
+                const currentMapping = variableMappings[variable] || (matchedColumn ? variable : '');
+                
+                let optionsHTML = `<option value="">${t('selectColumn')}</option>`;
+                columnNames.forEach(colName => {
+                    const selected = currentMapping === colName ? 'selected' : '';
+                    optionsHTML += `<option value="${colName}" ${selected}>${colName}</option>`;
+                });
+                
+                item.innerHTML = `
+                    <label style="min-width: 100px;">${variable}:</label>
+                    <select onchange="updateVariableMapping('${variable}', this.value)">
+                        ${optionsHTML}
+                    </select>
+                `;
+                configDiv.appendChild(item);
+                
+                // 如果变量名匹配列名，自动设置映射
+                if (matchedColumn && !variableMappings[variable]) {
+                    variableMappings[variable] = matchedColumn;
+                    item.querySelector('select').value = matchedColumn;
+                }
+            });
+            
+            generatePreview();
+        }
+
+        // 更新变量映射
+        function updateVariableMapping(variable, column) {
+            variableMappings[variable] = column;
+            generatePreview();
+        }
+
+        // 处理模板文件选择
+        function handleTemplateFileSelect(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                templateFile = files[0];
+                displayTemplateFileInfo();
+                generatePreview();
+            }
+        }
+
+        // 显示模板文件信息
+        function displayTemplateFileInfo() {
+            const fileInfoDiv = document.getElementById('templateFileInfo');
+            const noFileDiv = document.getElementById('noFileSelected');
+            if (templateFile) {
+                if (noFileDiv) noFileDiv.style.display = 'none';
+                fileInfoDiv.innerHTML = `
+                    <div class="file-item">
+                        <span class="file-name">${t('templateFile', {name: templateFile.name, size: (templateFile.size / 1024).toFixed(2)})}</span>
+                        <button onclick="clearTemplateFile()" class="btn-small danger">${t('clear')}</button>
+                    </div>
+                `;
+            } else {
+                if (noFileDiv) noFileDiv.style.display = 'block';
+                const existingFileItem = fileInfoDiv.querySelector('.file-item');
+                if (existingFileItem) {
+                    existingFileItem.remove();
+                }
+            }
+        }
+
+        // 清除模板文件
+        function clearTemplateFile() {
+            templateFile = null;
+            document.getElementById('templateFileInput').value = '';
+            displayTemplateFileInfo();
+            generatePreview();
+        }
+
+        // 生成预览
+        function generatePreview() {
+            const previewDiv = document.getElementById('previewSection');
+            previewDiv.innerHTML = '';
+            
+            const fileCountEl = document.getElementById('fileCount');
+            if (!templateFile) {
+                previewDiv.innerHTML = `<div class="help-text">${t('selectTemplateFirst')}</div>`;
+                if (fileCountEl) fileCountEl.textContent = '0';
+                updateFileCountText();
+                return;
+            }
+            
+            if (dataRows.length === 0) {
+                previewDiv.innerHTML = `<div class="help-text">${t('addRowFirst')}</div>`;
+                if (fileCountEl) fileCountEl.textContent = '0';
+                updateFileCountText();
+                return;
+            }
+            
+            // 检查变量映射是否完整
+            const unmappedVars = variables.filter(v => !variableMappings[v]);
+            if (unmappedVars.length > 0) {
+                previewDiv.innerHTML = `<div class="help-text" style="color: #e74c3c;">${t('selectColumnForVars', {vars: unmappedVars.join(', ')})}</div>`;
+                if (fileCountEl) fileCountEl.textContent = '0';
+                updateFileCountText();
+                return;
+            }
+            
+            // 生成预览
+            const template = document.getElementById('templateInput').value;
+            const originalExt = templateFile.name.substring(templateFile.name.lastIndexOf('.'));
+            
+            dataRows.forEach((data, index) => {
+                let newName = template;
+                variables.forEach(variable => {
+                    const column = variableMappings[variable];
+                    const value = column && data[column] ? data[column] : '';
+                    newName = newName.replace(new RegExp(`\\{${variable}\\}`, 'g'), value);
+                });
+                
+                // 确保有扩展名
+                if (!newName.includes('.')) {
+                    newName += originalExt;
+                }
+                
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.innerHTML = `
+                    <div class="old-name">${t('templateFile', {name: templateFile.name, size: (templateFile.size / 1024).toFixed(2)})}</div>
+                    <div class="new-name">${t('generateFile', {index: index + 1, name: newName})}</div>
+                `;
+                previewDiv.appendChild(previewItem);
+            });
+            
+            if (fileCountEl) fileCountEl.textContent = dataRows.length;
+            updateFileCountText();
+        }
+
+        // 更新文件数量文本
+        function updateFileCountText() {
+            const countEl = document.getElementById('fileCount');
+            const count = countEl ? countEl.textContent : '0';
+            const fileCountDisplay = document.getElementById('fileCountDisplay');
+            if (fileCountDisplay) {
+                fileCountDisplay.innerHTML = t('fileCount', {count: count});
+            }
+        }
+
+        // 生成文件
+        async function generateFiles() {
+            if (!templateFile) {
+                showStatus(t('selectTemplateFirst'), 'error');
+                return;
+            }
+            
+            if (dataRows.length === 0) {
+                showStatus(t('addRowFirst'), 'error');
+                return;
+            }
+            
+            const unmappedVars = variables.filter(v => !variableMappings[v]);
+            if (unmappedVars.length > 0) {
+                showStatus(t('selectColumnForVars', {vars: unmappedVars.join(', ')}), 'error');
+                return;
+            }
+            
+            const template = document.getElementById('templateInput').value;
+            const originalExt = templateFile.name.substring(templateFile.name.lastIndexOf('.'));
+            
+            // 读取模板文件内容
+            const templateFileBuffer = await templateFile.arrayBuffer();
+            let successCount = 0;
+            let errorCount = 0;
+            
+            showStatus(t('generating'), 'success');
+            
+            // 延迟下载，避免浏览器阻止多个下载
+            for (let i = 0; i < dataRows.length; i++) {
+                try {
+                    const data = dataRows[i];
+                    
+                    let newName = template;
+                    variables.forEach(variable => {
+                        const column = variableMappings[variable];
+                        const value = column && data[column] ? data[column] : '';
+                        newName = newName.replace(new RegExp(`\\{${variable}\\}`, 'g'), value);
+                    });
+                    
+                    // 确保有扩展名
+                    if (!newName.includes('.')) {
+                        newName += originalExt;
+                    }
+                    
+                    // 创建新文件并下载
+                    const newBlob = new Blob([templateFileBuffer], { type: templateFile.type });
+                    const url = URL.createObjectURL(newBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = newName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    successCount++;
+                    
+                    // 延迟下载，避免浏览器阻止
+                    if (i < dataRows.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                } catch (error) {
+                    console.error('生成文件失败:', error);
+                    errorCount++;
+                }
+            }
+            
+            showStatus(t('generateComplete', {success: successCount, error: errorCount}), 'success');
+        }
+
+        // 显示状态消息
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // 监听数据输入变化
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('data-cell')) {
+                updateDataRows();
+            } else if (e.target.classList.contains('column-name-input')) {
+                // 列名变化时，更新变量配置
+                updateVariableConfig();
+            }
+        });
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>
